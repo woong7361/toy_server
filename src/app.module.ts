@@ -29,10 +29,4 @@ import { UsersModule } from './users/users.module';
     }
   ],
 })
-export class AppModule implements NestModule{
-  configure(consumer: MiddlewareConsumer){
-    consumer
-      .apply(MongoLogMiddleware)
-      .forRoutes('*');
-  }
-}
+export class AppModule{}

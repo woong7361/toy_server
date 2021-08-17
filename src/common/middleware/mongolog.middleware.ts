@@ -8,7 +8,7 @@ export class MongoLogMiddleware implements NestMiddleware {
   constructor(@InjectConnection() private readonly connection: Connection){}
   private logger = new Logger('Mongodb');
   use(req: Request, res: Response, next: NextFunction ) {
-    mongoose.set('debug',true)
+    mongoose.set('debug',true);
     // res.on('finish',()=>{
     // })
     next();

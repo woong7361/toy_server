@@ -1,16 +1,23 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable, UseFilters } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schema/user.schema';
 import { Model } from 'mongoose';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ResponseUserDto } from './dto/response-user.dto';
 import { RequestEmail } from './dto/email-request.dto';
+import { HttpExcetionFilter } from 'src/common/exceptionfilter/http-exception.filter';
+import { ErrorMessageDto } from 'src/common/dto/error-message.dto';
 
-@ApiTags('User')
 @Controller('api/users')
+@ApiTags('User')
+@UseFilters(HttpExcetionFilter)
+@ApiResponse({
+  status: 400,
+  description: '실패',
+  type: ErrorMessageDto,
+})
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,

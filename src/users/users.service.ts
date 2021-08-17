@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, Injectable, Logger, UseFilters } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -10,24 +10,28 @@ import { RequestEmail } from './dto/email-request.dto';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>){}
+  private logger = new Logger('User');
 
   /*
   계정생성
   */
   async createAccount(createUserData: CreateUserDto) {
     const {email,name,password} = createUserData;
+    let exist;
+
     try{
-      const exist = await this.userModel.exists({email:email})
-      if(exist){
-        return {"error":'email is exist please check your email'}   //update please => throw error?
-      }
+      exist = await this.userModel.exists({email:email})
     }catch(error){
-      return {"error":error};                                                  //update please
+      this.logger.log(error);
+      throw new HttpException('mongo error', 400);                                                 
     }
 
-    try{
-      const hashedPassword = await bcrypt.hash(password, 5);
+    if(exist){
+      throw new HttpException('this email is exist please another email', 400);
+    }
 
+    const hashedPassword = await bcrypt.hash(password, 5);
+    try{
       const newUser = await this.userModel.create(
         {email,
          name,
@@ -36,7 +40,8 @@ export class UsersService {
       );
       return newUser;                                         
     }catch(error){
-      return {"error":error};
+      this.logger.log(error);
+      throw new HttpException('mongo error', 400);
     }
   }
 
@@ -48,7 +53,8 @@ export class UsersService {
       const allUserList = this.userModel.find({});
       return allUserList;  //is json?
     }catch(error){
-      return {"error":error};
+      this.logger.log(error);
+      throw new HttpException('mongo error', 400);
     }
   }
 
@@ -57,13 +63,17 @@ export class UsersService {
   */
   async findByEmail(emailData:RequestEmail) {
     const{email} = emailData;
+    let user;
+
     try{
-      const user = await this.userModel.findOne({email});  
-      if(user) return user;
-      else return {"error": "this email does not exist" }
+      user = await this.userModel.findOne({email});  
     }catch(error){
-      return {"error":error};
+      this.logger.log(error);
+      throw new HttpException('mongo error', 400);
     }
+
+    if(!user) throw new HttpException('this email is not exist', 400);
+    else return user
   }
 
   /*
@@ -71,22 +81,19 @@ export class UsersService {
   */
   async deleteAccount(emailData:RequestEmail){                    
     const{email} = emailData;
-    try{
-      const exist = await this.userModel.exists({email});
-      if(!exist){
-        return {"error": "this email is not exist please check your email"};
-      }
-    }catch(error){
-      return {"error":error};
-    }
+    let user
 
     try{
-      const user = await this.userModel.findOneAndDelete({email})
-      return user;
+      user = await this.userModel.findOneAndDelete({email})                   //user 가 존재하지 않을 때 code 줄이기?
     }catch(error){
-      return {"error":error};
+      this.logger.log(error);
+      throw new HttpException('mongo error', 400);
     }
+
+    if(!user) throw new HttpException('this email is not exist', 400);
+    else return user
   }
+
 
     update(id: number, updateUserDto: UpdateUserDto) {
       return `This action updates a #${id} user`;

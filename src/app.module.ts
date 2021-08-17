@@ -5,7 +5,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { MorganInterceptor, MorganModule } from 'nest-morgan';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { MongoLogMiddleware } from './common/mongolog.middleware';
+import { MongoLogMiddleware } from './common/middleware/mongolog.middleware';
 import { UsersModule } from './users/users.module';
 
 @Module({

@@ -58,8 +58,9 @@ export class UsersService {
   async findByEmail(emailData:RequestEmail) {
     const{email} = emailData;
     try{
-      const user = await this.userModel.findOne({email});   
-      return user;
+      const user = await this.userModel.findOne({email});  
+      if(user) return user;
+      else return {"error": "this email does not exist" }
     }catch(error){
       return {"error":error};
     }

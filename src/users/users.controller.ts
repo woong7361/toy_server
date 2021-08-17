@@ -5,43 +5,71 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schema/user.schema';
 import { Model } from 'mongoose';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ResponseUserDto } from './dto/response-user.dto';
+import { RequestEmail } from './dto/email-request.dto';
 
-@Controller('users')
+@ApiTags('User')
+@Controller('api/users')
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     @InjectModel(User.name) private userModel: Model<UserDocument>
   ) {}
 
-  @Post()
-  create(@Body() user: CreateUserDto) {
-    return this.usersService.create(user);
+  /*
+  회원가입
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: ResponseUserDto,
+  })
+  @ApiOperation({summary: '회원가입' })
+  @Post('account')
+  async createAccount(@Body() createUserData: CreateUserDto) {
+    return await this.usersService.createAccount(createUserData);
   }
 
-  @Get()
+  /*
+  회원 전체 리스트 확인
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: [ResponseUserDto],
+  })
+  @ApiOperation({summary: '회원 전체 조회' })
+  @Get('list/all')
   async findAll() {
-    const user = await this.userModel.create({
-      email:'11',
-      name:'22',
-      password:'33'
-    })
-
-    return user;
-
+    return await this.usersService.findAllUser()
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.usersService.findOne(+id);
+  /*
+  email로 회원 찾기
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: ResponseUserDto,
+  })
+  @ApiOperation({summary: '이메일로 회원 조회' })
+  @Get('list/:email')
+  async findOne(@Param() email:RequestEmail) {                    //email validation 해야함
+    return await this.usersService.findByEmail(email);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(+id);
+  /*
+  email로 회원 삭제하기
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: ResponseUserDto,
+  })
+  @ApiOperation({summary: '이메일로 회원 삭제' })
+  @Delete('account')
+  async deleteAccount(@Body() email:RequestEmail){
+    return await this.usersService.deleteAccount(email);
   }
 }

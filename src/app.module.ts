@@ -7,11 +7,14 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { MongoLogMiddleware } from './common/middleware/mongolog.middleware';
 import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     MorganModule,
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal:true,
+    }),
     MongooseModule.forRoot(process.env.MONGO_URI, {
       useNewUrlParser : true,
       useUnifiedTopology : true,
@@ -19,6 +22,7 @@ import { UsersModule } from './users/users.module';
       useFindAndModify : false
     }),
     UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [

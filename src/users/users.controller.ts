@@ -1,14 +1,17 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable, UseFilters } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable, UseFilters, UseGuards, Request, Res } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument } from './schema/user.schema';
-import { Model } from 'mongoose';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ResponseUserDto } from './dto/response-user.dto';
 import { RequestEmail } from './dto/email-request.dto';
 import { HttpExcetionFilter } from 'src/common/exceptionfilter/http-exception.filter';
 import { ErrorMessageDto } from 'src/common/dto/error-message.dto';
+import { LocalAuthGuard } from 'src/auth/gaurd/local-auth.guard';
+import { AuthService } from 'src/auth/auth.service';
+import { JwtAuthGuard } from 'src/auth/gaurd/jwt-auth.guard';
+import { ReqUser } from 'src/common/decorator/req-user.decorator';
+import { LoginRequestDto } from './dto/login-request.dto';
+import { JwtResponseDto } from './dto/jwt-token.response.dto';
 
 @Controller('api/users')
 @ApiTags('User')
@@ -21,7 +24,7 @@ import { ErrorMessageDto } from 'src/common/dto/error-message.dto';
 export class UsersController {
   constructor(
     private readonly usersService: UsersService,
-    @InjectModel(User.name) private userModel: Model<UserDocument>
+    private readonly authService: AuthService,
   ) {}
 
   /*
@@ -36,6 +39,39 @@ export class UsersController {
   @Post('account')
   async createAccount(@Body() createUserData: CreateUserDto) {
     return await this.usersService.createAccount(createUserData);
+  }
+
+  /*
+    로그인 기능
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: JwtResponseDto,
+  })
+  @ApiBody({
+    type:LoginRequestDto
+  })
+  @ApiOperation({summary: '로그인-JWT발급-header<Bearer>로 받음' })
+  @UseGuards(LocalAuthGuard)
+  @Post('login')
+  async login(@ReqUser() user:LoginRequestDto) {
+    return this.authService.login(user);     //access_token:"..." 발급 - JWT
+  }
+
+  /*
+    로그인 테스트용
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+    type: ResponseUserDto
+  })
+  @ApiOperation({summary: '로그인 테스트용' })
+  @UseGuards(JwtAuthGuard)
+  @Get('login/test')
+  getProfile(@ReqUser() user) {
+    return user;
   }
 
   /*

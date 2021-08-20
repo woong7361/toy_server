@@ -87,7 +87,7 @@ export class UsersController {
   */
   @ApiResponse({
     status: 200,
-    description: '성공',
+    description: '성공 ',
   })
   @ApiOperation({summary: '로그아웃 - 쿠키지워버림'})
   @Get('logout')

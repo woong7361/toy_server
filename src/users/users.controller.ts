@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable, UseFilters, UseGuards, Request, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Injectable, UseFilters, UseGuards,Res, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiBody, ApiHeader, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ResponseUserDto } from './dto/response-user.dto';
 import { RequestEmail } from './dto/email-request.dto';
 import { HttpExcetionFilter } from 'src/common/exceptionfilter/http-exception.filter';
@@ -12,6 +12,7 @@ import { JwtAuthGuard } from 'src/auth/gaurd/jwt-auth.guard';
 import { ReqUser } from 'src/common/decorator/req-user.decorator';
 import { LoginRequestDto } from './dto/login-request.dto';
 import { JwtResponseDto } from './dto/jwt-token.response.dto';
+import { Request, Response } from 'express';
 
 @Controller('api/users')
 @ApiTags('User')
@@ -28,7 +29,7 @@ export class UsersController {
   ) {}
 
   /*
-  회원가입
+  ------------------회원가입------------------
   */
   @ApiResponse({
     status: 200,
@@ -42,7 +43,7 @@ export class UsersController {
   }
 
   /*
-    로그인 기능
+    ----------------로그인 기능------------------
   */
   @ApiResponse({
     status: 200,
@@ -60,7 +61,7 @@ export class UsersController {
   }
 
   /*
-    로그인 테스트용
+    ------------------로그인 테스트용-----------------
   */
   @ApiResponse({
     status: 200,
@@ -69,13 +70,57 @@ export class UsersController {
   })
   @ApiOperation({summary: '로그인 테스트용' })
   @UseGuards(JwtAuthGuard)
-  @Get('login/test')
+  @Get('login/confirm')
   getProfile(@ReqUser() user) {
     return user;
   }
 
   /*
-  회원 전체 리스트 확인
+    ------------------쿠키 로그인------------------
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+  })
+  @ApiCookieAuth('Authorization')
+  @ApiBody({
+    type:LoginRequestDto
+  })
+  @ApiOperation({summary: '로그인에 성공하면 쿠키를 반환해줌 {Authorization=.......}'})
+  @UseGuards(LocalAuthGuard)
+  @Post('login/cookie')
+  async loginByCookie(
+    @Res({ passthrough: true }) res: Response, 
+    @ReqUser() user: LoginRequestDto) {
+
+    const {jwtToken, ...options} = this.authService.login(user);
+    res.cookie('Authorization', jwtToken,{                               //쿠키 옵션 설정하기(보안)
+      ...options
+    });
+    // return user;
+  }
+
+  /*
+    ------------------쿠키 로그아웃------------------
+  */
+  @ApiResponse({
+    status: 200,
+    description: '성공',
+  })
+  @ApiOperation({summary: '로그아웃 - 쿠키지워버림'})
+  @Get('logout')
+  async logoutByCookie(
+    @Res({ passthrough: true }) res: Response) {
+
+    const {jwtToken, ...options} = this.authService.logout();
+    //쿠키 옵션 설정하기(보안)
+    res.cookie('Authorization', jwtToken,{
+      ...options
+    });
+  }
+
+  /*
+  -----------------회원 전체 리스트 확인---------------
   */
   @ApiResponse({
     status: 200,
@@ -89,7 +134,7 @@ export class UsersController {
   }
 
   /*
-  email로 회원 찾기
+  -------------------email로 회원 찾기----------------------
   */
   @ApiResponse({
     status: 200,
@@ -103,7 +148,7 @@ export class UsersController {
   }
 
   /*
-  email로 회원 삭제하기
+  ------------------email로 회원 삭제하기-----------------
   */
   @ApiResponse({
     status: 200,

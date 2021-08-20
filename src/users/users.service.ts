@@ -6,25 +6,23 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { User, UserDocument } from './schema/user.schema';
 import * as bcrypt from "bcrypt"
 import { RequestEmail } from './dto/email-request.dto';
+import { FindService } from 'src/find/find.service';
+import { MongoException } from 'src/common/exception/mongo.exception';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectModel(User.name) private userModel: Model<UserDocument>){}
-  private logger = new Logger('User');
+  constructor(
+    @InjectModel(User.name) private userModel: Model<UserDocument>,
+    private readonly findService: FindService,
+    ){}
 
   /*
   계정생성
   */
   async createAccount(createUserData: CreateUserDto) {
     const {email,name,password} = createUserData;
-    let exist;
 
-    try{
-      exist = await this.userModel.exists({email:email})
-    }catch(error){
-      this.logger.log(error);
-      throw new HttpException('mongo error', 400);                                                 
-    }
+    const exist = await this.findService.isUserExistByEmail(email);
 
     if(exist){
       throw new HttpException('this email is exist please another email', 400);
@@ -40,8 +38,7 @@ export class UsersService {
       );
       return newUser;                                         
     }catch(error){
-      this.logger.log(error);
-      throw new HttpException('mongo error', 400);
+      throw new MongoException(error);
     }
   }
 
@@ -53,8 +50,7 @@ export class UsersService {
       const allUserList = this.userModel.find({});
       return allUserList;  //is json?
     }catch(error){
-      this.logger.log(error);
-      throw new HttpException('mongo error', 400);
+      throw new MongoException(error);
     }
   }
 
@@ -68,8 +64,7 @@ export class UsersService {
     try{
       user = await this.userModel.findOne({email});  
     }catch(error){
-      this.logger.log(error);
-      throw new HttpException('mongo error', 400);
+      throw new MongoException(error);
     }
 
     if(!user) throw new HttpException('this email is not exist', 400);
@@ -86,8 +81,7 @@ export class UsersService {
     try{
       user = await this.userModel.findOneAndDelete({email})                   //user 가 존재하지 않을 때 code 줄이기?
     }catch(error){
-      this.logger.log(error);
-      throw new HttpException('mongo error', 400);
+      throw new MongoException(error);
     }
 
     if(!user) throw new HttpException('this email is not exist', 400);

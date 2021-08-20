@@ -43,24 +43,6 @@ export class UsersController {
   }
 
   /*
-    ----------------로그인 기능------------------
-  */
-  @ApiResponse({
-    status: 200,
-    description: '성공',
-    type: JwtResponseDto,
-  })
-  @ApiBody({
-    type:LoginRequestDto
-  })
-  @ApiOperation({summary: '로그인-JWT발급-header<Bearer>로 받음' })
-  @UseGuards(LocalAuthGuard)
-  @Post('login')
-  async login(@ReqUser() user:LoginRequestDto) {
-    return this.authService.login(user);     //access_token:"..." 발급 - JWT
-  }
-
-  /*
     ------------------로그인 테스트용-----------------
   */
   @ApiResponse({

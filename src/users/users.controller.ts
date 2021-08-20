@@ -32,8 +32,8 @@ export class UsersController {
   ------------------회원가입------------------
   */
   @ApiResponse({
-    status: 200,
-    description: '성공',
+    status: 201,
+    description: 'Create Account',
     type: ResponseUserDto,
   })
   @ApiOperation({summary: '회원가입' })
